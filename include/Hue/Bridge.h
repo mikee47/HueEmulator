@@ -23,7 +23,7 @@
 #include <Network/HttpServer.h>
 #include <Network/WebConstants.h>
 #include <SimpleTimer.h>
-#include <UPnP/RootDevice.h>
+#include <Network/UPnP/RootDevice.h>
 
 namespace Hue
 {

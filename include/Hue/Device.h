@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <UPnP/Enumerator.h>
+#include <Network/UPnP/Enumerator.h>
 #include <WString.h>
 #include <BitManipulations.h>
 #include <ArduinoJson6.h>
