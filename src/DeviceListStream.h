@@ -31,7 +31,7 @@ namespace Hue
 class DeviceListStream : public IDataSourceStream
 {
 public:
-	DeviceListStream(DeviceEnumerator* devices) : devices(devices)
+	DeviceListStream(Device::Enumerator* devices) : devices(devices)
 	{
 	}
 
@@ -61,7 +61,7 @@ protected:
 	void begin();
 
 private:
-	DeviceEnumerator* devices;
+	Device::Enumerator* devices;
 	String content;
 	uint8_t state = 0;
 	unsigned readPos = 0;

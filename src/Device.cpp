@@ -212,9 +212,9 @@ void Device::getInfo(JsonObject json)
 	json[FS_swversion] = FS_VERSION;
 }
 
-/* DeviceEnumerator */
+/* Device::Enumerator */
 
-Device* DeviceEnumerator::find(Device::ID id)
+Device* Device::Enumerator::find(Device::ID id)
 {
 	reset();
 	Device* device;
@@ -227,7 +227,7 @@ Device* DeviceEnumerator::find(Device::ID id)
 	return nullptr;
 }
 
-Device* DeviceEnumerator::find(const String& name)
+Device* Device::Enumerator::find(const String& name)
 {
 	reset();
 	Device* device;

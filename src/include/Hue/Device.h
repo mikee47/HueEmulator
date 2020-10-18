@@ -92,6 +92,30 @@ public:
 	 */
 	using Callback = Delegate<void(int errorCode)>;
 
+	/**
+	 * @brief Abstract class to manage a list of devices
+	 * @note Applications must provide an implementation of this for the bridge.
+	 * Returned device objects may only be considered valid for the duration of the current
+	 * task call as they may be destroyed at any time.
+	 */
+	class Enumerator : public UPnP::Enumerator<Device, Enumerator>
+	{
+	public:
+		/**
+		 * @brief Lookup device by ID
+		 * @retval Device* nullptr if not found
+		 * @note With default implementation, enumerator position is updated
+		 */
+		virtual Device* find(Device::ID id);
+
+		/**
+		 * @brief Lookup device by name
+		 * @retval Device* nullptr if not found
+		 * @note With default implementation, enumerator position is updated
+		 */
+		virtual Device* find(const String& name);
+	};
+
 	virtual ~Device()
 	{
 	}
@@ -154,158 +178,9 @@ public:
 	}
 };
 
-class OnOffDevice : public Device
-{
-public:
-	OnOffDevice(ID id, const String& name) : id(id), name(name)
-	{
-	}
-
-	ID getId() const override
-	{
-		return id;
-	}
-
-	String getName() const override
-	{
-		return name;
-	}
-
-	bool getAttribute(Attribute attr, unsigned& value) const override
-	{
-		switch(attr) {
-		case Attribute::on:
-			value = on;
-			return true;
-		default:
-			return false;
-		}
-	}
-
-	Status setAttribute(Attribute attr, unsigned value, Callback callback) override
-	{
-		switch(attr) {
-		case Attribute::on:
-			this->on = value;
-			return Status::success;
-		default:
-			return Status::error;
-		}
-	}
-
-private:
-	ID id;
-	String name;
-	bool on = false;
-};
-
-class DimmableDevice : public OnOffDevice
-{
-public:
-	DimmableDevice(ID id, const String& name) : OnOffDevice(id, name)
-	{
-	}
-
-	bool getAttribute(Attribute attr, unsigned& value) const override
-	{
-		switch(attr) {
-		case Attribute::bri:
-			value = bri;
-			return true;
-		default:
-			return OnOffDevice::getAttribute(attr, value);
-		}
-	}
-
-	Status setAttribute(Attribute attr, unsigned value, Callback callback) override
-	{
-		switch(attr) {
-		case Attribute::bri:
-			this->bri = value;
-			return Status::success;
-		default:
-			return OnOffDevice::setAttribute(attr, value, callback);
-		}
-	}
-
-private:
-	uint8_t bri = 1;
-};
-
-class ColourDevice : public DimmableDevice
-{
-public:
-	ColourDevice(ID id, const String& name) : DimmableDevice(id, name)
-	{
-	}
-
-	bool getAttribute(Attribute attr, unsigned& value) const override
-	{
-		switch(attr) {
-		case Attribute::sat:
-			value = sat;
-			return true;
-		case Attribute::hue:
-			value = hue;
-			return true;
-		case Attribute::ct:
-			value = ct;
-			return true;
-		default:
-			return DimmableDevice::getAttribute(attr, value);
-		}
-	}
-
-	Status setAttribute(Attribute attr, unsigned value, Callback callback) override
-	{
-		switch(attr) {
-		case Attribute::sat:
-			sat = value;
-			return Status::success;
-		case Attribute::hue:
-			hue = value;
-			return Status::success;
-		case Attribute::ct:
-			ct = value;
-			return Status::success;
-		default:
-			return DimmableDevice::setAttribute(attr, value, callback);
-		}
-	}
-
-private:
-	uint8_t sat = 0;
-	uint16_t hue = 0;
-	uint16_t ct = 234;
-};
-
 String toString(Device::Attribute attr);
 String toString(Device::Attributes attr);
 bool fromString(const char* tag, Device::Attribute& attr);
 String toString(Device::ColorMode mode);
-
-/**
- * @brief Abstract class to manage a list of devices
- * @note Applications must provide an implementation of this for the bridge.
- * Returned device objects may only be considered valid for the duration of the current
- * task call as they may be destroyed at any time.
- */
-class DeviceEnumerator : public UPnP::Enumerator<Device, DeviceEnumerator>
-{
-public:
-	/**
-	 * @brief Lookup device by ID
-	 * @retval Device* nullptr if not found
-	 * @note With default implementation, enumerator position is updated
-	 */
-	virtual Device* find(Device::ID id);
-
-	/**
-	 * @brief Lookup device by name
-	 * @retval Device* nullptr if not found
-	 * @note With default implementation, enumerator position is updated
-	 */
-	virtual Device* find(const String& name);
-};
 
 } // namespace Hue

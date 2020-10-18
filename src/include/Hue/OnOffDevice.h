@@ -1,5 +1,5 @@
 /**
- * DeviceList.h
+ * OnOffDevice.h
  *
  * Copyright 2019 mikee47 <mike@sillyhouse.net>
  *
@@ -20,42 +20,52 @@
 #pragma once
 
 #include "Device.h"
-#include <WVector.h>
 
 namespace Hue
 {
-using DeviceList = Vector<Device>;
-
-class DeviceListEnumerator : public Device::Enumerator
+class OnOffDevice : public Device
 {
 public:
-	DeviceListEnumerator(DeviceList& list) : list(list)
+	OnOffDevice(ID id, const String& name) : id(id), name(name)
 	{
 	}
 
-	Device::Enumerator* clone() override
+	ID getId() const override
 	{
-		return new DeviceListEnumerator(*this);
+		return id;
 	}
 
-	void reset() override
+	String getName() const override
 	{
-		index = 0;
+		return name;
 	}
 
-	Device* current() override
+	bool getAttribute(Attribute attr, unsigned& value) const override
 	{
-		return (index < list.count()) ? &list[index] : nullptr;
+		switch(attr) {
+		case Attribute::on:
+			value = on;
+			return true;
+		default:
+			return false;
+		}
 	}
 
-	Device* next() override
+	Status setAttribute(Attribute attr, unsigned value, Callback callback) override
 	{
-		return (index < list.count()) ? &list[index++] : nullptr;
+		switch(attr) {
+		case Attribute::on:
+			this->on = value;
+			return Status::success;
+		default:
+			return Status::error;
+		}
 	}
 
 private:
-	DeviceList& list;
-	int index{-1};
+	ID id;
+	String name;
+	bool on = false;
 };
 
 } // namespace Hue

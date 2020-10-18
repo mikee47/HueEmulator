@@ -86,7 +86,7 @@ public:
 
 	using StateChangeDelegate = Delegate<void(const Hue::Device& device, Hue::Device::Attributes attr)>;
 
-	Bridge(DeviceEnumerator& devices) : devices(devices)
+	Bridge(Hue::Device::Enumerator& devices) : devices(devices)
 	{
 		// Gen 3+, old versions use 1901
 		setTcpPort(80);
@@ -158,7 +158,7 @@ private:
 private:
 	UserMap users;
 	bool pairingEnabled = false;
-	DeviceEnumerator& devices;
+	Hue::Device::Enumerator& devices;
 	ConfigDelegate configDelegate;
 	StateChangeDelegate stateChangeDelegate;
 	Stats stats;
