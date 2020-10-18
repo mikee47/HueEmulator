@@ -23,6 +23,7 @@
 #include <WString.h>
 #include <BitManipulations.h>
 #include <ArduinoJson6.h>
+#include <Data/BitSet.h>
 
 #define HUE_ERROR_CODE_MAP(XX)                                                                                         \
 	XX(1, UnauthorizedUser, "unauthorized user")                                                                       \
@@ -53,6 +54,15 @@ enum class Error {
 #undef XX
 };
 
+/**
+ * @brief Status of a `setAttribute` request
+ */
+enum class Status {
+	success, ///< Request successful
+	pending, ///< Request was pended, will invoke callback when completed
+	error,   ///< Attribute not supported or failed to queue I/O request
+};
+
 String getErrorDesc(Error error);
 JsonObject createSuccess(JsonDocument& result);
 JsonObject createError(JsonDocument& result, const String& path, Error error, String description);
@@ -60,13 +70,15 @@ JsonObject createError(JsonDocument& result, const String& path, Error error, St
 class Device : public UPnP::Item
 {
 public:
-	typedef uint32_t ID;
+	using ID = uint32_t;
 
 	enum class Attribute {
 #define XX(t) t,
 		HUE_DEVICE_ATTR_MAP(XX)
 #undef XX
 	};
+
+	using Attributes = BitSet<uint8_t, Attribute>;
 
 	enum class ColorMode {
 #define XX(t) t,
@@ -93,17 +105,17 @@ public:
 	 * @param attr
 	 * @param value
 	 * @param callback Invoked when attribute has been set
-	 * @retval bool true on success, false if attribute not supported or failed to queue I/O request
+	 * @retval Status
 	 */
-	virtual bool setAttribute(Attribute attr, unsigned value, Callback callback) = 0;
+	virtual Status setAttribute(Attribute attr, unsigned value, Callback callback) = 0;
 
 	/**
-	 * @brief Get the (cachced) device attribute value
+	 * @brief Get the (cached) device attribute value
 	 * @param attr
 	 * @param value
 	 * @retval bool true on success, false if attribute not supported or value unknown
 	 */
-	virtual bool getAttribute(Attribute attr, unsigned& value) = 0;
+	virtual bool getAttribute(Attribute attr, unsigned& value) const = 0;
 
 	/**
 	 * @brief Returns the unique device ID string
@@ -159,7 +171,7 @@ public:
 		return name;
 	}
 
-	bool getAttribute(Attribute attr, unsigned& value) override
+	bool getAttribute(Attribute attr, unsigned& value) const override
 	{
 		switch(attr) {
 		case Attribute::on:
@@ -170,14 +182,14 @@ public:
 		}
 	}
 
-	bool setAttribute(Attribute attr, unsigned value, Callback callback) override
+	Status setAttribute(Attribute attr, unsigned value, Callback callback) override
 	{
 		switch(attr) {
 		case Attribute::on:
 			this->on = value;
-			return true;
+			return Status::success;
 		default:
-			return false;
+			return Status::error;
 		}
 	}
 
@@ -194,7 +206,7 @@ public:
 	{
 	}
 
-	bool getAttribute(Attribute attr, unsigned& value) override
+	bool getAttribute(Attribute attr, unsigned& value) const override
 	{
 		switch(attr) {
 		case Attribute::bri:
@@ -205,12 +217,12 @@ public:
 		}
 	}
 
-	bool setAttribute(Attribute attr, unsigned value, Callback callback) override
+	Status setAttribute(Attribute attr, unsigned value, Callback callback) override
 	{
 		switch(attr) {
 		case Attribute::bri:
 			this->bri = value;
-			return true;
+			return Status::success;
 		default:
 			return OnOffDevice::setAttribute(attr, value, callback);
 		}
@@ -227,7 +239,7 @@ public:
 	{
 	}
 
-	bool getAttribute(Attribute attr, unsigned& value) override
+	bool getAttribute(Attribute attr, unsigned& value) const override
 	{
 		switch(attr) {
 		case Attribute::sat:
@@ -244,18 +256,18 @@ public:
 		}
 	}
 
-	bool setAttribute(Attribute attr, unsigned value, Callback callback) override
+	Status setAttribute(Attribute attr, unsigned value, Callback callback) override
 	{
 		switch(attr) {
 		case Attribute::sat:
 			sat = value;
-			return true;
+			return Status::success;
 		case Attribute::hue:
 			hue = value;
-			return true;
+			return Status::success;
 		case Attribute::ct:
 			ct = value;
-			return true;
+			return Status::success;
 		default:
 			return DimmableDevice::setAttribute(attr, value, callback);
 		}
@@ -268,6 +280,7 @@ private:
 };
 
 String toString(Device::Attribute attr);
+String toString(Device::Attributes attr);
 bool fromString(const char* tag, Device::Attribute& attr);
 String toString(Device::ColorMode mode);
 

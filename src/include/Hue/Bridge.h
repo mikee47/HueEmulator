@@ -32,8 +32,6 @@ enum class Model {
 	LWB007, ///< Colour
 };
 
-using namespace UPnP;
-
 struct Stats {
 	struct {
 		uint16_t count;   ///< Total number of HTTP requests
@@ -86,7 +84,7 @@ public:
 	 */
 	using ConfigDelegate = Delegate<void(const Config& config)>;
 
-	using StateChangeDelegate = Delegate<void(const Hue::Device& device, unsigned attr)>;
+	using StateChangeDelegate = Delegate<void(const Hue::Device& device, Hue::Device::Attributes attr)>;
 
 	Bridge(DeviceEnumerator& devices) : devices(devices)
 	{
@@ -124,7 +122,7 @@ public:
 
 	String getSerial() const;
 
-	bool formatMessage(Message& msg, MessageSpec& ms) override;
+	bool formatMessage(SSDP::Message& msg, SSDP::MessageSpec& ms) override;
 
 	bool onHttpRequest(HttpServerConnection& connection) override;
 
@@ -144,6 +142,13 @@ public:
 	}
 
 	void getStatusInfo(JsonObject json);
+
+	void deviceStateChanged(const Hue::Device& device, Hue::Device::Attributes changed)
+	{
+		if(stateChangeDelegate) {
+			stateChangeDelegate(device, changed);
+		}
+	}
 
 private:
 	void createUser(JsonObjectConst request, JsonDocument& result, const String& path);

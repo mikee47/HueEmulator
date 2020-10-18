@@ -21,7 +21,7 @@
 
 #include <Data/Stream/MemoryDataStream.h>
 #include <Network/Http/HttpRequest.h>
-#include <Hue/Device.h>
+#include "include/Hue/Bridge.h"
 #include <WHashMap.h>
 
 namespace Hue
@@ -33,11 +33,12 @@ namespace Hue
 class ResponseStream : public MemoryDataStream
 {
 public:
-	ResponseStream(HttpServerConnection& connection, String& path) : connection(connection), path(path)
+	ResponseStream(Bridge& bridge, Device& device, HttpServerConnection& connection, String& path)
+		: bridge(bridge), device(device), connection(connection), path(path)
 	{
 	}
 
-	void handleRequest(JsonDocument& request, Device& device);
+	void handleRequest(JsonDocument& request);
 
 	int available() override
 	{
@@ -55,10 +56,13 @@ public:
 private:
 	void generateResponse();
 
+	Bridge& bridge;
+	Device& device;
 	HttpServerConnection& connection;
 	String path;
 	HashMap<String, String> results;
 	uint8_t outstandingRequests{0};
+	Device::Attributes changed;
 };
 
 } // namespace Hue

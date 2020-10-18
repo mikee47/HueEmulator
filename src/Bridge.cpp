@@ -114,7 +114,7 @@ String Bridge::getField(Field desc)
 	}
 }
 
-bool Bridge::formatMessage(Message& msg, MessageSpec& ms)
+bool Bridge::formatMessage(SSDP::Message& msg, SSDP::MessageSpec& ms)
 {
 	msg[F("hue-bridgeid")] = WifiStation.getMAC();
 	return RootDevice::formatMessage(msg, ms);
@@ -408,8 +408,8 @@ void Bridge::handleApiRequest(HttpServerConnection& connection)
 		}
 
 		++stats.request.setDeviceInfo;
-		auto stream = new ResponseStream(connection, requestPath);
-		stream->handleRequest(requestDoc, *device);
+		auto stream = new ResponseStream(*this, *device, connection, requestPath);
+		stream->handleRequest(requestDoc);
 		return sendStream(stream, 0);
 	}
 

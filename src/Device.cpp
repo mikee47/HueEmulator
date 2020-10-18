@@ -110,6 +110,23 @@ String toString(Device::Attribute attr)
 	return CStringArray(fstrAttrTags)[unsigned(attr)];
 }
 
+String toString(Device::Attributes attr)
+{
+	String s;
+	CStringArray csa(fstrAttrTags);
+	for(auto it = csa.begin(); it != csa.end(); it++) {
+		auto a = Device::Attribute(it.index());
+		if(attr[a]) {
+			if(s) {
+				s += ',';
+			}
+			s += *it;
+		}
+	}
+
+	return s;
+}
+
 bool fromString(const char* tag, Device::Attribute& attr)
 {
 	int i = CStringArray(fstrAttrTags).indexOf(tag);

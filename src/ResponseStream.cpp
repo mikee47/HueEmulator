@@ -21,7 +21,7 @@
 
 namespace Hue
 {
-void ResponseStream::handleRequest(JsonDocument& request, Device& device)
+void ResponseStream::handleRequest(JsonDocument& request)
 {
 	for(JsonPair pair : request.as<JsonObject>()) {
 		Device::Attribute attr;
@@ -44,6 +44,8 @@ void ResponseStream::handleRequest(JsonDocument& request, Device& device)
 				if(errorCode < 0) {
 					auto tag = toString(attr);
 					results[tag] = nullptr;
+				} else {
+					changed[attr] = true;
 				}
 
 				if(outstandingRequests == 0) {
@@ -53,8 +55,14 @@ void ResponseStream::handleRequest(JsonDocument& request, Device& device)
 			};
 
 			results[tag] = pair.value().as<String>();
-			if(device.setAttribute(attr, value, callback)) {
+			auto status = device.setAttribute(attr, value, callback);
+			if(status == Status::pending) {
 				++outstandingRequests;
+				continue;
+			}
+
+			if(status == Status::success) {
+				changed[attr] = true;
 				continue;
 			}
 		}
@@ -69,6 +77,8 @@ void ResponseStream::handleRequest(JsonDocument& request, Device& device)
 
 void ResponseStream::generateResponse()
 {
+	bridge.deviceStateChanged(device, changed);
+
 	StaticJsonDocument<2048> doc;
 	doc.to<JsonArray>();
 	for(unsigned i = 0; i < results.count(); ++i) {
