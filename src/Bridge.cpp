@@ -67,8 +67,6 @@ String Bridge::getField(Field desc)
 		return WifiStation.getMAC();
 	case Field::UDN:
 		return F("uuid:2f402f80-da50-11e1-9b23-") + getField(Field::serialNumber);
-	case Field::presentationURL:
-		return F("index.html");
 	case Field::serverId:
 		return RootDevice::getField(desc) + _F(" IpBridge/1.17.0");
 	case Field::baseURL:
