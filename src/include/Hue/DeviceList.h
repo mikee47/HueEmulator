@@ -45,12 +45,12 @@ public:
 
 	Device* current() override
 	{
-		return (index < list.count()) ? &list[index] : nullptr;
+		return (size_t(index) < list.count()) ? &list[index] : nullptr;
 	}
 
 	Device* next() override
 	{
-		return (index < list.count()) ? &list[index++] : nullptr;
+		return (size_t(index) < list.count()) ? &list[index++] : nullptr;
 	}
 
 private:
