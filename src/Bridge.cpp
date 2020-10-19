@@ -24,48 +24,10 @@
 #include <ArduinoJson.h>
 #include <Data/CStringArray.h>
 #include <Data/HexString.h>
-
-#define LOCALSTR(s) DEFINE_FSTR_LOCAL(FS_##s, #s)
-LOCALSTR(req);
-LOCALSTR(count);
-LOCALSTR(root);
-LOCALSTR(getAllDev);
-LOCALSTR(getDev);
-LOCALSTR(setDev);
-LOCALSTR(resp);
-LOCALSTR(size);
-LOCALSTR(err);
-LOCALSTR(res);
-LOCALSTR(meth);
-LOCALSTR(users);
-LOCALSTR(user);
-LOCALSTR(devicetype);
-LOCALSTR(auth);
+#include "Strings.h"
 
 namespace Hue
 {
-/* Stats */
-
-void Stats::serialize(JsonObject json) const
-{
-	auto req = json.createNestedObject(FS_req);
-	req[FS_count] = request.count;
-	req[FS_root] = request.root;
-	req[FS_getAllDev] = request.getAllDeviceInfo;
-	req[FS_getDev] = request.getDeviceInfo;
-	req[FS_setDev] = request.setDeviceInfo;
-	auto resp = json.createNestedObject(FS_resp);
-	resp[FS_count] = response.count;
-	resp[FS_size] = response.size;
-	auto err = json.createNestedObject(FS_err);
-	err[FS_count] = error.count;
-	err[FS_res] = error.resourceNotAvailable;
-	err[FS_meth] = error.methodNotAvailable;
-	err[FS_user] = error.unauthorizedUser;
-}
-
-/* Bridge */
-
 void Bridge::getStatusInfo(JsonObject json)
 {
 	stats.serialize(json);
@@ -109,6 +71,8 @@ String Bridge::getField(Field desc)
 		return F("index.html");
 	case Field::serverId:
 		return RootDevice::getField(desc) + _F(" IpBridge/1.17.0");
+	case Field::baseURL:
+		return F("/hue/");
 	default:
 		return RootDevice::getField(desc);
 	}
@@ -147,13 +111,13 @@ void Bridge::createUser(JsonObjectConst request, JsonDocument& result, const Str
 		return;
 	}
 
-	Config cfg;
-	cfg.type = Config::Type::AuthorizeUser;
-	cfg.deviceType = request[_F("devicetype")].as<const char*>();
-
-	uint8_t buf[16];
-	os_get_random(buf, sizeof(buf));
-	cfg.name = makeHexString(buf, sizeof(buf));
+	uint8_t name[16];
+	os_get_random(name, sizeof(name));
+	Config cfg{
+		.type = Config::Type::AuthorizeUser,
+		.deviceType = request[_F("devicetype")].as<const char*>(),
+		.name = makeHexString(name, sizeof(name)),
+	};
 
 	configure(cfg);
 
@@ -182,10 +146,11 @@ bool Bridge::validateUser(const char* userName)
 	}
 
 	debug_i("In pairing mode, storing provided username '%s'", userName);
-	Config config;
-	config.type = Config::Type::AuthorizeUser;
-	config.deviceType = F("Default");
-	config.name = userName;
+	Config config{
+		.type = Config::Type::AuthorizeUser,
+		.deviceType = F("Default"),
+		.name = userName,
+	};
 	configure(config);
 	if(configDelegate) {
 		configDelegate(config);
@@ -319,7 +284,7 @@ void Bridge::handleApiRequest(HttpServerConnection& connection)
 
 	auto resourceNotAvailable = [&]() {
 		++stats.error.resourceNotAvailable;
-		String s = getErrorDesc(Error::ResourceNotAvailable);
+		String s = toString(Error::ResourceNotAvailable);
 		s.replace(F("<resource>"), requestPath);
 		createError(resultDoc, requestPath, Error::ResourceNotAvailable, s);
 		return sendResult();
@@ -327,7 +292,7 @@ void Bridge::handleApiRequest(HttpServerConnection& connection)
 
 	auto methodNotAvailable = [&]() {
 		++stats.error.methodNotAvailable;
-		String s = getErrorDesc(Error::MethodNotAvailable);
+		String s = toString(Error::MethodNotAvailable);
 		s.replace(F("<method_name>"), http_method_str(request.method));
 		s.replace(F("<resource>"), requestPath);
 		createError(resultDoc, requestPath, Error::MethodNotAvailable, s);

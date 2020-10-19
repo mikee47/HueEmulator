@@ -19,35 +19,10 @@
 
 #include "include/Hue/Device.h"
 #include <Platform/Station.h>
+#include "Strings.h"
 
 namespace Hue
 {
-// Strings used in this file
-#define LOCALSTR(str) DEFINE_FSTR_LOCAL(FS_##str, #str);
-LOCALSTR(address);
-LOCALSTR(alert);
-LOCALSTR(colormode);
-LOCALSTR(description);
-LOCALSTR(effect);
-LOCALSTR(error);
-LOCALSTR(homeautomation);
-LOCALSTR(LCT007);
-LOCALSTR(LWB001);
-LOCALSTR(manufacturername);
-LOCALSTR(mode);
-LOCALSTR(modelid);
-LOCALSTR(name);
-LOCALSTR(none);
-LOCALSTR(Philips);
-LOCALSTR(reachable);
-LOCALSTR(state);
-LOCALSTR(swversion);
-LOCALSTR(type);
-LOCALSTR(uniqueid);
-DEFINE_FSTR_LOCAL(FS_VERSION, "1.0.0");
-DEFINE_FSTR_LOCAL(FS_extendedColorLight, "Extended color light");
-DEFINE_FSTR_LOCAL(FS_onOffLight, "On/off light");
-
 #define XX(t) #t "\0"
 DEFINE_FSTR_LOCAL(fstrAttrTags, HUE_DEVICE_ATTR_MAP(XX));
 #undef XX
@@ -56,7 +31,7 @@ DEFINE_FSTR_LOCAL(fstrAttrTags, HUE_DEVICE_ATTR_MAP(XX));
 DEFINE_FSTR_LOCAL(fstrColormodeTags, HUE_COLORMODE_MAP(XX));
 #undef XX
 
-String getErrorDesc(Error error)
+String toString(Error error)
 {
 	switch(error) {
 #define XX(code, tag, desc)                                                                                            \
@@ -94,7 +69,7 @@ JsonObject createError(JsonDocument& result, const String& path, Error error, St
 	err[FS_type] = int(error);
 	err[FS_address] = path;
 	if(!description) {
-		description = getErrorDesc(error);
+		description = toString(error);
 	}
 	err[FS_description] = description;
 

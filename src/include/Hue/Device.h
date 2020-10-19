@@ -58,12 +58,34 @@ enum class Error {
  * @brief Status of a `setAttribute` request
  */
 enum class Status {
-	success, ///< Request successful
-	pending, ///< Request was pended, will invoke callback when completed
-	error,   ///< Attribute not supported or failed to queue I/O request
+	/**
+	 * @brief The action was performed immediately without error
+	 */
+	success,
+	/**
+	 * @brief The action was accepted but requires further processing
+	 *
+	 * Use this to perform requests asynchronously.
+	 * You MUST invoked the provided `Callback` function to complete the request.
+	 *
+	 * When controlling remote devices, for example connected via serial link,
+	 * you might issue the command immediately and then return `pending`. When the serial
+	 * response is received, or a timeout occurs, then the request can be completed.
+	 * Note that the error code passed to the callback is optional and will be specific
+	 * to your application: it will be output in verbose debug mode so may be useful.
+	 *
+	 */
+	pending,
+	/**
+	 *  @brief Action could not be completed
+	 *
+	 *  If the Attribute not supported by your device, or an internal I/O error occured
+	 *  then return this value.
+	 */
+	error,
 };
 
-String getErrorDesc(Error error);
+String toString(Error error);
 JsonObject createSuccess(JsonDocument& result);
 JsonObject createError(JsonDocument& result, const String& path, Error error, String description);
 
@@ -88,9 +110,11 @@ public:
 
 	/**
 	 * @brief Callback invoked when setAttribute() has completed
-	 * @param errorCode Internal error code, >= 0 for success, < 0 for error
+	 * @param status Result of the operation
+	 * @param errorCode Application-specific error code
+	 * @note Any status other than `success` is considered a failure
 	 */
-	using Callback = Delegate<void(int errorCode)>;
+	using Callback = Delegate<void(Status status, int errorCode)>;
 
 	/**
 	 * @brief Abstract class to manage a list of devices
@@ -125,11 +149,12 @@ public:
 	virtual String getName() const = 0;
 
 	/**
-	 * @brief Set a device attribute asynchronously
-	 * @param attr
-	 * @param value
-	 * @param callback Invoked when attribute has been set
+	 * @brief Set a device attribute
+	 * @param attr The attribute to change
+	 * @param value Value for the attribute (exact type is attribute-specific)
+	 * @param callback If you return Status::pending, invoke this callback when completed
 	 * @retval Status
+	 * @note DO NOT invoke the callback directly: only use it if pended.
 	 */
 	virtual Status setAttribute(Attribute attr, unsigned value, Callback callback) = 0;
 

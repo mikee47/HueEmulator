@@ -1,5 +1,5 @@
 /**
- * DimmableDevice.h
+ * Stats.h - Maintain useful statistics for actions performed by a Hue Bridge
  *
  * Copyright 2019 mikee47 <mike@sillyhouse.net>
  *
@@ -19,41 +19,32 @@
 
 #pragma once
 
-#include "OnOffDevice.h"
+#include <stdint.h>
+#include <ArduinoJson6.h>
 
 namespace Hue
 {
-class DimmableDevice : public OnOffDevice
-{
-public:
-	DimmableDevice(ID id, const String& name) : OnOffDevice(id, name)
-	{
-	}
+struct Stats {
+	struct {
+		uint16_t count;   ///< Total number of HTTP requests
+		uint16_t root;	///< eRequests handled by root UPnP device
+		uint16_t ignored; ///< Requests not starting with /api
+		uint16_t getAllDeviceInfo;
+		uint16_t getDeviceInfo;
+		uint16_t setDeviceInfo;
+	} request;
+	struct {
+		uint16_t count;
+		size_t size; ///< Total size of response data
+	} response;
+	struct {
+		uint16_t count;
+		uint16_t resourceNotAvailable;
+		uint16_t methodNotAvailable;
+		uint16_t unauthorizedUser;
+	} error;
 
-	bool getAttribute(Attribute attr, unsigned& value) const override
-	{
-		switch(attr) {
-		case Attribute::bri:
-			value = bri;
-			return true;
-		default:
-			return OnOffDevice::getAttribute(attr, value);
-		}
-	}
-
-	Status setAttribute(Attribute attr, unsigned value, Callback callback) override
-	{
-		switch(attr) {
-		case Attribute::bri:
-			this->bri = value;
-			return Status::success;
-		default:
-			return OnOffDevice::setAttribute(attr, value, callback);
-		}
-	}
-
-private:
-	uint8_t bri{1};
+	void serialize(JsonObject json) const;
 };
 
 } // namespace Hue

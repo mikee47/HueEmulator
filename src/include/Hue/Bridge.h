@@ -20,6 +20,7 @@
 #pragma once
 
 #include "Device.h"
+#include "Stats.h"
 #include <Network/HttpServer.h>
 #include <Network/WebConstants.h>
 #include <SimpleTimer.h>
@@ -32,71 +33,74 @@ enum class Model {
 	LWB007, ///< Colour
 };
 
-struct Stats {
-	struct {
-		uint16_t count;   ///< Total number of HTTP requests
-		uint16_t root;	///< eRequests handled by root UPnP device
-		uint16_t ignored; ///< Requests not starting with /api
-		uint16_t getAllDeviceInfo;
-		uint16_t getDeviceInfo;
-		uint16_t setDeviceInfo;
-	} request;
-	struct {
-		uint16_t count;
-		size_t size; ///< Total size of response data
-	} response;
-	struct {
-		uint16_t count;
-		uint16_t resourceNotAvailable;
-		uint16_t methodNotAvailable;
-		uint16_t unauthorizedUser;
-	} error;
-
-	void serialize(JsonObject json) const;
-};
-
+/**
+ * @brief Information about user
+ */
 struct User {
-	String deviceType;
-	uint16_t count = 0;
-	bool authorized = false;
+	String deviceType;		///< How the user identifies themselves
+	uint16_t count{0};		///< Number of requests received from this user
+	bool authorized{false}; ///< Only authorized users may perform actions
 };
 
-// Mapped by username
+/**
+ * @brief List of users, key is user name
+ */
 using UserMap = HashMap<String, User>;
 
 class Bridge : public UPnP::RootDevice
 {
 public:
+	/**
+	 *
+	 */
 	struct Config {
 		enum class Type {
 			AuthorizeUser,
 			RevokeUser,
 		};
 
-		Type type;
-		String deviceType; // How device identifies itself
-		String name;	   // randomly generated key
+		Type type;		   ///< Configuration action to perform
+		String deviceType; ///< How device identifies itself
+		String name;	   ///< Randomly generated key
 	};
 
 	/**
-	 * @brief Called when a new user key is created. This must be stored permanently somewhere
-	 * and passed back via `configure()` during system startup.
+	 * @brief Called when a new user key is created
+	 *
+	 * The application should use this to store new users in persistent memory.
+	 * At startup, these should be passed back via the `configure()` method.
 	 */
 	using ConfigDelegate = Delegate<void(const Config& config)>;
 
+	/**
+	 * @brief A global callback may be provided to perform actions when device states change
+	 * @param device The device which has been updated
+	 * @param attr A set of flags indicating which attributes were changed
+	 *
+	 * The callback is invoked only when all request actions have been completed.
+	 * The current state may be quereied using `device::getAttribute`.
+	 *
+	 */
 	using StateChangeDelegate = Delegate<void(const Hue::Device& device, Hue::Device::Attributes attr)>;
 
+	/**
+	 * @brief Constructor
+	 * @param devices List of devices to present
+	 */
 	Bridge(Hue::Device::Enumerator& devices) : devices(devices)
 	{
-		// Gen 3+, old versions use 1901
-		setTcpPort(80);
 	}
 
+	/**
+	 * @brief Perform a configuration action
+	 * @param config The action to perform
+	 */
 	void configure(const Config& config);
 
 	/**
 	 * @brief Enable creation of new users
 	 * @note DO NOT leave this permanently enabled!
+	 *
 	 * This could be enabled via web page on local Access Point, or physical push-button.
 	 * It should also be time limited, so exits pairing mode after maybe 30 seconds.
 	 * If a user creation request is received then this is disabled automatically.
@@ -105,8 +109,6 @@ public:
 	{
 		pairingEnabled = enable;
 	}
-
-	String getField(Field desc) override;
 
 	void onConfigChange(ConfigDelegate delegate)
 	{
@@ -120,35 +122,54 @@ public:
 
 	void begin();
 
-	String getSerial() const;
-
-	bool formatMessage(SSDP::Message& msg, SSDP::MessageSpec& ms) override;
-
-	bool onHttpRequest(HttpServerConnection& connection) override;
-
+	/**
+	 * @brief Get bridge statistics
+	 * @retval const Stats&
+	 */
 	const Stats& getStats()
 	{
 		return stats;
 	}
 
+	/**
+	 * @brief Clear the bridge statistics
+	 */
 	void resetStats()
 	{
 		memset(&stats, 0, sizeof(stats));
 	}
 
+	/**
+	 * @brief Access the list of users
+	 * @retval const UserMap&
+	 */
 	const UserMap& getUsers() const
 	{
 		return users;
 	}
 
+	/**
+	 * @brief Get bridge status information in JSON format
+	 * @param json Where to write information
+	 */
 	void getStatusInfo(JsonObject json);
 
+	/**
+	 * @brief Devices call this method when their state has been updated
+	 * @note Applications should not call this method
+	 */
 	void deviceStateChanged(const Hue::Device& device, Hue::Device::Attributes changed)
 	{
 		if(stateChangeDelegate) {
 			stateChangeDelegate(device, changed);
 		}
 	}
+
+	/* UPnP::Device */
+
+	String getField(Field desc) override;
+	bool formatMessage(SSDP::Message& msg, SSDP::MessageSpec& ms) override;
+	bool onHttpRequest(HttpServerConnection& connection) override;
 
 private:
 	void createUser(JsonObjectConst request, JsonDocument& result, const String& path);

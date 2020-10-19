@@ -1,5 +1,5 @@
 /**
- * DimmableDevice.h
+ * Stats.cpp
  *
  * Copyright 2019 mikee47 <mike@sillyhouse.net>
  *
@@ -17,43 +17,27 @@
  *
  ****/
 
-#pragma once
-
-#include "OnOffDevice.h"
+#include "include/Hue/Stats.h"
+#include "Strings.h"
 
 namespace Hue
 {
-class DimmableDevice : public OnOffDevice
+void Stats::serialize(JsonObject json) const
 {
-public:
-	DimmableDevice(ID id, const String& name) : OnOffDevice(id, name)
-	{
-	}
-
-	bool getAttribute(Attribute attr, unsigned& value) const override
-	{
-		switch(attr) {
-		case Attribute::bri:
-			value = bri;
-			return true;
-		default:
-			return OnOffDevice::getAttribute(attr, value);
-		}
-	}
-
-	Status setAttribute(Attribute attr, unsigned value, Callback callback) override
-	{
-		switch(attr) {
-		case Attribute::bri:
-			this->bri = value;
-			return Status::success;
-		default:
-			return OnOffDevice::setAttribute(attr, value, callback);
-		}
-	}
-
-private:
-	uint8_t bri{1};
-};
+	auto req = json.createNestedObject(FS_req);
+	req[FS_count] = request.count;
+	req[FS_root] = request.root;
+	req[FS_getAllDev] = request.getAllDeviceInfo;
+	req[FS_getDev] = request.getDeviceInfo;
+	req[FS_setDev] = request.setDeviceInfo;
+	auto resp = json.createNestedObject(FS_resp);
+	resp[FS_count] = response.count;
+	resp[FS_size] = response.size;
+	auto err = json.createNestedObject(FS_err);
+	err[FS_count] = error.count;
+	err[FS_res] = error.resourceNotAvailable;
+	err[FS_meth] = error.methodNotAvailable;
+	err[FS_user] = error.unauthorizedUser;
+}
 
 } // namespace Hue

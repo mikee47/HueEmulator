@@ -65,7 +65,7 @@ public:
 private:
 	ID id;
 	String name;
-	bool on = false;
+	bool on{false};
 };
 
 } // namespace Hue

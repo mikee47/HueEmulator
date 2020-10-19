@@ -1,5 +1,5 @@
 /**
- * DimmableDevice.h
+ * Strings.cpp
  *
  * Copyright 2019 mikee47 <mike@sillyhouse.net>
  *
@@ -17,43 +17,16 @@
  *
  ****/
 
-#pragma once
-
-#include "OnOffDevice.h"
+#include "Strings.h"
 
 namespace Hue
 {
-class DimmableDevice : public OnOffDevice
-{
-public:
-	DimmableDevice(ID id, const String& name) : OnOffDevice(id, name)
-	{
-	}
+#define XX(s) DEFINE_FSTR(FS_##s, #s)
+HUE_STRING_MAP(XX)
+#undef XX
 
-	bool getAttribute(Attribute attr, unsigned& value) const override
-	{
-		switch(attr) {
-		case Attribute::bri:
-			value = bri;
-			return true;
-		default:
-			return OnOffDevice::getAttribute(attr, value);
-		}
-	}
-
-	Status setAttribute(Attribute attr, unsigned value, Callback callback) override
-	{
-		switch(attr) {
-		case Attribute::bri:
-			this->bri = value;
-			return Status::success;
-		default:
-			return OnOffDevice::setAttribute(attr, value, callback);
-		}
-	}
-
-private:
-	uint8_t bri{1};
-};
+#define XX(n, s) DEFINE_FSTR(FS_##n, #s)
+HUE_STRING_MAP2(XX)
+#undef XX
 
 } // namespace Hue

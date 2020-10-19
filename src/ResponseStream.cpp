@@ -36,12 +36,12 @@ void ResponseStream::handleRequest(JsonDocument& request)
 
 			debug_i("[HUE] Set '%s' = %u", tag, value);
 
-			auto callback = [this, attr](int errorCode) {
+			auto callback = [this, attr](Status status, int errorCode) {
 				--outstandingRequests;
-				debug_i("ResponseStream::requestComplete, errorCode = %d, outstanding = %u", errorCode,
-						outstandingRequests);
+				debug_i("ResponseStream::requestComplete, status = %d, errorCode = %d, outstanding = %u",
+						unsigned(status), errorCode, outstandingRequests);
 
-				if(errorCode < 0) {
+				if(status != Status::success) {
 					auto tag = toString(attr);
 					results[tag] = nullptr;
 				} else {
@@ -88,7 +88,7 @@ void ResponseStream::generateResponse()
 			auto obj = createSuccess(doc);
 			obj[path + "/" + tag] = value;
 		} else {
-			String s = getErrorDesc(Error::InternalError);
+			String s = toString(Error::InternalError);
 			s.replace(F("<error_code>"), "-1");
 			createError(doc, path, Error::InternalError, s);
 		}
