@@ -94,6 +94,7 @@ void ResponseStream::generateResponse()
 		}
 	}
 	size_t len = Json::serialize(doc, *this);
+	(void)len;
 
 	//		stats.response.size += len;
 	debug_i("Serialized %d bytes", len);

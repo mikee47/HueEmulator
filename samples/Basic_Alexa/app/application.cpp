@@ -34,11 +34,9 @@ int onHttpRequest(HttpServerConnection& connection, HttpRequest& request, HttpRe
 	}
 
 	auto path = request.uri.getRelativePath();
-	if(path.length() == 0 || path.equalsIgnoreCase(F("index.html"))) {
-		response.sendString(F("<html>"
-							  "<h1>Welcome to Sming</h1>"
-							  "Basic_Alexa Demo"
-							  "</html>"));
+	if(path.length() == 0 || path == F("index.html")) {
+		auto stream = UPnP::deviceHost.generateDebugPage(F("Basic Alexa Demo"));
+		response.sendDataStream(stream, MIME_HTML);
 		return 0;
 	}
 
