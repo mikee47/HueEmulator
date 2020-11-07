@@ -223,7 +223,7 @@ void Bridge::handleApiRequest(HttpServerConnection& connection)
 {
 	auto& request = *connection.getRequest();
 	String requestPath = request.uri.getRelativePath();
-	debug_i("[HUE] Request: %s %s", http_method_str(request.method), requestPath.c_str());
+	debug_i("[HUE] Request: %s %s", toString(request.method), requestPath.c_str());
 
 	auto badRequest = [&]() -> void {
 		connection.getResponse()->code = HTTP_STATUS_BAD_REQUEST;
@@ -291,7 +291,7 @@ void Bridge::handleApiRequest(HttpServerConnection& connection)
 	auto methodNotAvailable = [&]() {
 		++stats.error.methodNotAvailable;
 		String s = toString(Error::MethodNotAvailable);
-		s.replace(F("<method_name>"), http_method_str(request.method));
+		s.replace(F("<method_name>"), toString(request.method));
 		s.replace(F("<resource>"), requestPath);
 		createError(resultDoc, requestPath, Error::MethodNotAvailable, s);
 		return sendResult();
