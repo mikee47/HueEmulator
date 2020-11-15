@@ -167,7 +167,13 @@ public:
 
 	/* UPnP::Device */
 
-	String getField(Field desc) override;
+	String getField(Field desc) const override;
+
+	Version version() const override
+	{
+		return 1;
+	}
+
 	bool formatMessage(SSDP::Message& msg, SSDP::MessageSpec& ms) override;
 	bool onHttpRequest(HttpServerConnection& connection) override;
 

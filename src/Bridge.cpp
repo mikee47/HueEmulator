@@ -42,7 +42,7 @@ void Bridge::getStatusInfo(JsonObject json)
 	}
 }
 
-String Bridge::getField(Field desc)
+String Bridge::getField(Field desc) const
 {
 	switch(desc) {
 	case Field::friendlyName: {
