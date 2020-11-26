@@ -24,7 +24,7 @@
 #include <Network/HttpServer.h>
 #include <Network/WebConstants.h>
 #include <SimpleTimer.h>
-#include <Network/UPnP/RootDevice.h>
+#include <Network/UPnP/schemas-upnp-org/ClassGroup.h>
 
 namespace Hue
 {
@@ -47,7 +47,7 @@ struct User {
  */
 using UserMap = HashMap<String, User>;
 
-class Bridge : public UPnP::RootDevice
+class Bridge : public UPnP::schemas_upnp_org::device::Basic1Template<Bridge>
 {
 public:
 	/**
@@ -87,7 +87,7 @@ public:
 	 * @brief Constructor
 	 * @param devices List of devices to present
 	 */
-	Bridge(Hue::Device::Enumerator& devices) : devices(devices)
+	Bridge(Hue::Device::Enumerator& devices) : Basic1Template(), devices(devices)
 	{
 	}
 
@@ -168,11 +168,6 @@ public:
 	/* UPnP::Device */
 
 	String getField(Field desc) const override;
-
-	Version version() const override
-	{
-		return 1;
-	}
 
 	bool formatMessage(SSDP::Message& msg, SSDP::MessageSpec& ms) override;
 	bool onHttpRequest(HttpServerConnection& connection) override;

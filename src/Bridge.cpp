@@ -67,19 +67,17 @@ String Bridge::getField(Field desc) const
 		return WifiStation.getMAC();
 	case Field::UDN:
 		return F("uuid:2f402f80-da50-11e1-9b23-") + getField(Field::serialNumber);
-	case Field::serverId:
-		return RootDevice::getField(desc) + _F(" IpBridge/1.17.0");
-	case Field::baseURL:
-		return F("/hue/");
+	case Field::productNameAndVersion:
+		return F("IpBridge/1.17.0");
 	default:
-		return RootDevice::getField(desc);
+		return Device::getField(desc);
 	}
 }
 
 bool Bridge::formatMessage(SSDP::Message& msg, SSDP::MessageSpec& ms)
 {
 	msg[F("hue-bridgeid")] = WifiStation.getMAC();
-	return RootDevice::formatMessage(msg, ms);
+	return Device::formatMessage(msg, ms);
 }
 
 void Bridge::configure(const Config& config)
@@ -203,7 +201,7 @@ bool Bridge::onHttpRequest(HttpServerConnection& connection)
 {
 	++stats.request.count;
 
-	if(RootDevice::onHttpRequest(connection)) {
+	if(Device::onHttpRequest(connection)) {
 		++stats.request.root;
 		return true;
 	}

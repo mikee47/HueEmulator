@@ -19,6 +19,7 @@ HttpServer server;
 Hue::DeviceList devices;
 Hue::DeviceListEnumerator enumerator(devices);
 Hue::Bridge bridge(enumerator);
+constexpr uint16_t serverPort{80};
 
 constexpr uint8_t LED_PIN{2}; // GPIO2
 
@@ -59,7 +60,7 @@ void gotIP(IpAddress ip, IpAddress netmask, IpAddress gateway)
 		});
 	};
 
-	server.listen(bridge.getTcpPort());
+	server.listen(serverPort);
 	server.paths.setDefault(onHttpRequest);
 	server.setBodyParser(MIME_JSON, bodyToStringParser);
 	server.setBodyParser(MIME_XML, bodyToStringParser);
@@ -144,7 +145,7 @@ void gotIP(IpAddress ip, IpAddress netmask, IpAddress gateway)
 
 void init()
 {
-	Serial.setTxBufferSize(4096);
+	Serial.setTxBufferSize(1024);
 	Serial.begin(SERIAL_BAUD_RATE);
 	Serial.systemDebugOutput(true);
 
