@@ -22,7 +22,7 @@
 #include "Device.h"
 #include "Stats.h"
 #include <Network/HttpServer.h>
-#include <Network/WebConstants.h>
+#include <Data/WebConstants.h>
 #include <SimpleTimer.h>
 #include <Network/UPnP/schemas-upnp-org/ClassGroup.h>
 
