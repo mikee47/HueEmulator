@@ -1,4 +1,4 @@
-/**
+/****
  * DeviceListStream.h - Support for streaming Hue device information in JSON format
  *
  * Copyright 2019 mikee47 <mike@sillyhouse.net>

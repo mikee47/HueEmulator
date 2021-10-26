@@ -1,4 +1,4 @@
-/**
+/****
  * Stats.h - Maintain useful statistics for actions performed by a Hue Bridge
  *
  * Copyright 2019 mikee47 <mike@sillyhouse.net>

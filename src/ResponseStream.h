@@ -1,4 +1,4 @@
-/**
+/****
  * ResponseStream.h
  *
  * Copyright 2019 mikee47 <mike@sillyhouse.net>
