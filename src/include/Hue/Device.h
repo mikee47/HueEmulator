@@ -79,7 +79,7 @@ enum class Status {
 	/**
 	 *  @brief Action could not be completed
 	 *
-	 *  If the Attribute not supported by your device, or an internal I/O error occured
+	 *  If the Attribute not supported by your device, or an internal I/O error occurred
 	 *  then return this value.
 	 */
 	error,
